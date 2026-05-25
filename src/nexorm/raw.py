@@ -9,8 +9,8 @@ class RawQuery:
         self.db = db or default_db
 
     def all(self):
-        return [self.model.from_row(row) for row in self.db.fetchall(self.sql, self.params)]
+        return [self.model.from_row(row, db=self.db) for row in self.db.fetchall(self.sql, self.params)]
 
     def first(self):
         row = self.db.fetchone(self.sql, self.params)
-        return self.model.from_row(row) if row else None
+        return self.model.from_row(row, db=self.db) if row else None

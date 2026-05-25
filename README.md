@@ -1,7 +1,7 @@
 <h3 align="center">NexORM</h3>
 
 <p align="center">
-  A minimal Python ORM for SQLite apps with models, query helpers, transactions, migrations, and named database connections.
+  A minimal Python ORM for SQLite, PostgreSQL, and MySQL apps with models, query helpers, transactions, migrations, and named database connections.
 </p>
 
 <p align="center">
@@ -23,6 +23,14 @@
 
 ```bash
 pip install nexorm
+```
+
+SQLite works with Python's standard library. Install the optional driver extras for PostgreSQL or MySQL:
+
+```bash
+pip install "nexorm[postgres]"
+pip install "nexorm[mysql]"
+pip install "nexorm[all]"
 ```
 
 For local development:
@@ -89,6 +97,15 @@ python manage.py --database local.sqlite3 --models myproject.models makemigratio
 python manage.py --database local.sqlite3 --models myproject.models migrate
 ```
 
+Use another backend by passing connection options or a database URL:
+
+```bash
+python manage.py --backend postgresql --database appdb --host localhost --user app --password secret migrate
+python manage.py --backend mysql --database appdb --host localhost --user app --password secret migrate
+python manage.py --url postgresql://app:secret@localhost:5432/appdb migrate
+python manage.py --url mysql://app:secret@localhost:3306/appdb migrate
+```
+
 Use the ORM:
 
 ```python
@@ -96,6 +113,8 @@ from nexorm import configure, transaction
 from app.models import Post, User
 
 configure("db.sqlite3")
+# configure("postgresql://app:secret@localhost:5432/appdb")
+# configure("mysql://app:secret@localhost:3306/appdb")
 
 user = User.objects.create(username="admin")
 post = Post.objects.create(title="Hello", user_id=user.id)
@@ -112,6 +131,8 @@ Use raw SQL only with parameters:
 ```python
 user = User.objects.raw("SELECT * FROM users WHERE id = ?", [1]).first()
 ```
+
+Use the placeholder style for the configured backend: `?` for SQLite and `%s` for PostgreSQL/MySQL.
 
 Use with Flask:
 
@@ -161,6 +182,10 @@ Configure the default connection:
 from nexorm import configure
 
 configure("db.sqlite3")
+# or:
+configure("postgresql://app:secret@localhost:5432/appdb")
+# or:
+configure(backend="mysql", database="appdb", host="localhost", user="app", password="secret")
 ```
 
 Configure named connections:
@@ -170,9 +195,10 @@ from nexorm import configure, transaction
 from app.models import User
 
 configure("db.sqlite3")
-configure("analytics.sqlite3", alias="analytics")
+configure("postgresql://app:secret@localhost:5432/appdb", alias="primary")
+configure("mysql://app:secret@localhost:3306/analytics", alias="analytics")
 
-admin = User.objects.create(username="admin")
+admin = User.objects.using("primary").create(username="admin")
 report_user = User.objects.using("analytics").create(username="report")
 
 analytics_users = User.objects.using("analytics").filter(username__contains="rep").all()
@@ -193,7 +219,7 @@ with transaction.atomic():
     Post.objects.create(title="Inside a transaction", user_id=1)
 ```
 
-Nested transactions use SQLite savepoints.
+Nested transactions use database savepoints.
 
 ## Migrations CLI
 
@@ -234,6 +260,8 @@ You can still use the installed `nexorm` command directly:
 ```bash
 nexorm --database app.sqlite3 --models app.models makemigrations
 nexorm --database app.sqlite3 --models app.models migrate
+nexorm --backend postgresql --database appdb --host localhost --user app --password secret migrate
+nexorm --url mysql://app:secret@localhost:3306/appdb migrate
 ```
 
 ## Build
@@ -267,4 +295,4 @@ python -m twine upload --repository testpypi dist/*
 
 ## Status
 
-NexORM is an early package. The current implementation focuses on SQLite and keeps the public API small: model fields, managers/querysets, raw queries, transactions, named connections, and file-based migrations.
+NexORM is an early package. The current implementation supports SQLite through `sqlite3`, PostgreSQL through `psycopg`, and MySQL through `PyMySQL`. The public API is still small: model fields, managers/querysets, raw queries, transactions, named connections, backend-aware relations, and file-based migrations with backend-specific DDL rendering.

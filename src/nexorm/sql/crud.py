@@ -16,21 +16,45 @@ class CRUDEngine:
                 continue
             fields.append(name)
             values.append(field.to_db(value))
-        ph = ", ".join([self.dialect.placeholder] * len(fields))
-        columns = ", ".join(self.dialect.quote_identifier(field) for field in fields)
-        sql = f"INSERT INTO {self.dialect.quote_identifier(meta.table_name)} ({columns}) VALUES ({ph})"
+        if fields:
+            ph = ", ".join([self.dialect.placeholder] * len(fields))
+            columns = ", ".join(self.dialect.quote_identifier(field) for field in fields)
+            sql = (
+                f"INSERT INTO {self.dialect.quote_identifier(meta.table_name)} "
+                f"({columns}) VALUES ({ph})"
+            )
+        else:
+            sql = self.dialect.insert_default_values_sql(meta.table_name)
+        returning_pk = (
+            meta.primary_key
+            and meta.primary_key.auto_increment
+            and getattr(instance, meta.primary_key.name, None) is None
+            and self.dialect.supports_insert_returning
+        )
+        if returning_pk:
+            sql += f" RETURNING {self.dialect.quote_identifier(meta.primary_key.name)}"
         cursor = self.db.execute(sql, values)
         if meta.primary_key and getattr(instance, meta.primary_key.name, None) is None:
-            setattr(instance, meta.primary_key.name, cursor.lastrowid)
+            if returning_pk:
+                row = cursor.fetchone()
+                setattr(instance, meta.primary_key.name, row[meta.primary_key.name])
+            else:
+                setattr(instance, meta.primary_key.name, cursor.lastrowid)
         if not self.db.in_atomic:
             self.db.commit()
+        instance._nexorm_db = self.db
         return instance
 
     def update(self, instance):
         meta = instance._meta
         pk = meta.primary_key
         fields = [name for name in meta.fields if name != pk.name]
-        assignments = ", ".join([f"{self.dialect.quote_identifier(name)} = {self.dialect.placeholder}" for name in fields])
+        assignments = ", ".join(
+            [
+                f"{self.dialect.quote_identifier(name)} = {self.dialect.placeholder}"
+                for name in fields
+            ]
+        )
         values = [meta.fields[name].to_db(getattr(instance, name, None)) for name in fields]
         values.append(getattr(instance, pk.name))
         sql = (
@@ -40,6 +64,7 @@ class CRUDEngine:
         self.db.execute(sql, values)
         if not self.db.in_atomic:
             self.db.commit()
+        instance._nexorm_db = self.db
         return instance
 
     def delete(self, instance):

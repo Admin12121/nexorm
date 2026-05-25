@@ -45,9 +45,11 @@ class Model(metaclass=ModelBase):
             setattr(self, name, value)
 
     def validate(self, db=None):
+        db = db or getattr(self, "_nexorm_db", None)
         return validate_instance(self, db)
 
     def save(self, db=None):
+        db = db or getattr(self, "_nexorm_db", None)
         self.validate(db)
         engine = CRUDEngine(db)
         pk = self._meta.primary_key
@@ -56,9 +58,11 @@ class Model(metaclass=ModelBase):
         return wrap_integrity_error(lambda: engine.update(self))
 
     def delete(self, db=None):
+        db = db or getattr(self, "_nexorm_db", None)
         return wrap_integrity_error(lambda: CRUDEngine(db).delete(self))
 
     def update(self, db=None, **kwargs):
+        db = db or getattr(self, "_nexorm_db", None)
         for key, value in kwargs.items():
             setattr(self, key, value)
         return self.save(db)
@@ -67,8 +71,11 @@ class Model(metaclass=ModelBase):
         return {name: getattr(self, name, None) for name in self._meta.fields}
 
     @classmethod
-    def from_row(cls, row):
+    def from_row(cls, row, db=None):
         data = {}
         for name, field in cls._meta.fields.items():
             data[name] = field.from_db(row[name]) if name in row.keys() else None
-        return cls(**data)
+        instance = cls(**data)
+        if db is not None:
+            instance._nexorm_db = db
+        return instance

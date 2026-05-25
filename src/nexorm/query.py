@@ -25,7 +25,7 @@ class QuerySet:
 
     def all(self):
         sql, params = SQLCompiler(self).select()
-        return [self.model.from_row(row) for row in self.db.fetchall(sql, params)]
+        return [self.model.from_row(row, db=self.db) for row in self.db.fetchall(sql, params)]
 
     def first(self):
         rows = self.limit(1).all()

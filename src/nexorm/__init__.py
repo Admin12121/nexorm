@@ -1,4 +1,5 @@
 from nexorm.database import Database, configure, default_db, get_connection
+from nexorm.dialects import MySQLDialect, PostgresDialect, SQLiteDialect
 from nexorm.exceptions import DoesNotExist, IntegrityError, MultipleObjectsReturned, ValidationError
 from nexorm.fields import (
     BooleanField,
@@ -31,6 +32,9 @@ __all__ = [
     "ForeignKey",
     "configure",
     "Database",
+    "SQLiteDialect",
+    "PostgresDialect",
+    "MySQLDialect",
     "default_db",
     "get_connection",
     "transaction",

@@ -5,13 +5,13 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "nexorm"
 version = "0.1.0"
-description = "A minimal Django-style ORM for SQLite applications."
+description = "A minimal Django-style ORM for SQLite, PostgreSQL, and MySQL applications."
 readme = "README.md"
 requires-python = ">=3.10"
 authors = [
     { name = "Admin12121" }
 ]
-keywords = ["orm", "sqlite", "database", "migrations", "model"]
+keywords = ["orm", "sqlite", "postgresql", "mysql", "database", "migrations", "model"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Environment :: Console",
@@ -29,6 +29,16 @@ classifiers = [
 dependencies = []
 
 [project.optional-dependencies]
+postgres = [
+    "psycopg[binary]>=3.1",
+]
+mysql = [
+    "PyMySQL>=1.1",
+]
+all = [
+    "psycopg[binary]>=3.1",
+    "PyMySQL>=1.1",
+]
 dev = [
     "build>=1.2",
     "pytest>=8",
