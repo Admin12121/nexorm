@@ -286,7 +286,7 @@ python -m pytest -q tests/test_backends.py
 Create an API token in PyPI, then upload manually:
 
 ```bash
-python -m twine upload dist/*
+python -m twine upload dist/nexorm-0.2.0*
 ```
 
 When prompted:

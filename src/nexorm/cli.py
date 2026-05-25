@@ -52,7 +52,7 @@ def main(argv=None):
     sub.add_parser("makemigrations")
     sub.add_parser("migrate")
     sub.add_parser("showmigrations")
-    rollback = sub.add_parser("rollback")
+    sub.add_parser("rollback")
     sqlmigrate = sub.add_parser("sqlmigrate")
     sqlmigrate.add_argument("name")
     sub.add_parser("dbshell")
