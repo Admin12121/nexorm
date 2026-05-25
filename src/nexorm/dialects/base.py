@@ -19,6 +19,7 @@ class BaseDialect:
         "datetime": "DATETIME",
         "float": "REAL",
         "decimal": "DECIMAL",
+        "uuid": "TEXT",
     }
     field_type_map = {
         "IntegerField": "integer",
@@ -29,6 +30,7 @@ class BaseDialect:
         "DateTimeField": "datetime",
         "FloatField": "float",
         "DecimalField": "decimal",
+        "UUIDField": "uuid",
     }
 
     def sql_type(self, field):
@@ -37,6 +39,9 @@ class BaseDialect:
     def sql_type_from_state(self, column):
         field = column.get("field", column)
         field_type = field.get("type") or column.get("type")
+        if field_type == "ForeignKey" and field.get("target_field"):
+            field = field["target_field"]
+            field_type = field.get("type")
         type_name = self.field_type_map.get(
             field_type, field.get("type_name") or column.get("type_name")
         )
@@ -84,6 +89,11 @@ class BaseDialect:
     def field_state(self, field):
         data = field.deconstruct()
         data.setdefault("type", field.__class__.__name__)
+        if data["type"] == "ForeignKey":
+            try:
+                data["target_field"] = field.target_field().deconstruct()
+            except ConfigurationError:
+                pass
         return {
             "name": field.name,
             "field": data,

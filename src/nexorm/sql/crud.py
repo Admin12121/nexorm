@@ -43,6 +43,7 @@ class CRUDEngine:
         if not self.db.in_atomic:
             self.db.commit()
         instance._nexorm_db = self.db
+        instance._nexorm_persisted = True
         return instance
 
     def update(self, instance):
@@ -65,6 +66,7 @@ class CRUDEngine:
         if not self.db.in_atomic:
             self.db.commit()
         instance._nexorm_db = self.db
+        instance._nexorm_persisted = True
         return instance
 
     def delete(self, instance):
@@ -79,6 +81,7 @@ class CRUDEngine:
         )
         if not self.db.in_atomic:
             self.db.commit()
+        instance._nexorm_persisted = False
 
     def bulk_insert(self, instances):
         return [self.insert(instance) for instance in instances]

@@ -14,6 +14,7 @@ class PostgresDialect(BaseDialect):
         "datetime": "TIMESTAMP",
         "float": "DOUBLE PRECISION",
         "decimal": "DECIMAL",
+        "uuid": "UUID",
     }
 
     def auto_primary_key_sql(self):

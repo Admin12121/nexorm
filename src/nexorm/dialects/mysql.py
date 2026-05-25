@@ -14,6 +14,7 @@ class MySQLDialect(BaseDialect):
         "datetime": "DATETIME",
         "float": "DOUBLE",
         "decimal": "DECIMAL",
+        "uuid": "CHAR(36)",
     }
 
     def auto_primary_key_sql(self):

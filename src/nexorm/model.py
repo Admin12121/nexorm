@@ -1,9 +1,10 @@
 from nexorm.exceptions import ConfigurationError
-from nexorm.fields import Field, IntegerField
+from nexorm.fields import Field, UUIDField
 from nexorm.manager import Manager
 from nexorm.options import Options
 from nexorm.registry import register_model
 from nexorm.sql.crud import CRUDEngine
+from nexorm.uuid import uuid7
 from nexorm.validators import validate_instance, wrap_integrity_error
 
 
@@ -28,7 +29,7 @@ class ModelBase(type):
         for key, field in fields.items():
             cls._meta.add_field(key, field)
         if cls._meta.primary_key is None:
-            cls._meta.add_field("id", IntegerField(primary_key=True, auto_increment=True))
+            cls._meta.add_field("id", UUIDField(primary_key=True, default=uuid7))
         cls.objects = Manager()
         register_model(cls)
         return cls
@@ -43,6 +44,7 @@ class Model(metaclass=ModelBase):
         for name, field in self._meta.fields.items():
             value = kwargs.get(name, field.get_default())
             setattr(self, name, value)
+        self._nexorm_persisted = False
 
     def validate(self, db=None):
         db = db or getattr(self, "_nexorm_db", None)
@@ -50,10 +52,10 @@ class Model(metaclass=ModelBase):
 
     def save(self, db=None):
         db = db or getattr(self, "_nexorm_db", None)
+        adding = not getattr(self, "_nexorm_persisted", False)
         self.validate(db)
         engine = CRUDEngine(db)
-        pk = self._meta.primary_key
-        if getattr(self, pk.name, None) is None:
+        if adding:
             return wrap_integrity_error(lambda: engine.insert(self))
         return wrap_integrity_error(lambda: engine.update(self))
 
@@ -78,4 +80,5 @@ class Model(metaclass=ModelBase):
         instance = cls(**data)
         if db is not None:
             instance._nexorm_db = db
+        instance._nexorm_persisted = True
         return instance

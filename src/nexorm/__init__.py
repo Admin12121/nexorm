@@ -11,9 +11,11 @@ from nexorm.fields import (
     IntegerField,
     StringField,
     TextField,
+    UUIDField,
 )
 from nexorm.model import Model
 from nexorm.transaction import transaction
+from nexorm.uuid import uuid7
 
 
 __version__ = "0.1.0"
@@ -25,6 +27,7 @@ __all__ = [
     "IntegerField",
     "StringField",
     "TextField",
+    "UUIDField",
     "BooleanField",
     "DateTimeField",
     "FloatField",
@@ -38,6 +41,7 @@ __all__ = [
     "default_db",
     "get_connection",
     "transaction",
+    "uuid7",
     "ValidationError",
     "IntegrityError",
     "DoesNotExist",

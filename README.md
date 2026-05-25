@@ -59,11 +59,10 @@ After that, you can use NexORM through `python manage.py`, similar to Django.
 Define models in your app, for example `app/models.py`:
 
 ```python
-from nexorm import ForeignKey, IntegerField, Model, StringField
+from nexorm import ForeignKey, Model, StringField
 
 
 class User(Model):
-    id = IntegerField(primary_key=True, auto_increment=True)
     username = StringField(max_length=100, unique=True, index=True)
 
     class Meta:
@@ -71,7 +70,6 @@ class User(Model):
 
 
 class Post(Model):
-    id = IntegerField(primary_key=True, auto_increment=True)
     title = StringField(max_length=200)
     user_id = ForeignKey("User", on_delete="CASCADE", related_name="posts")
 
@@ -149,7 +147,7 @@ def create_app():
 
 ## Models
 
-Define models by subclassing `Model` and assigning field instances. If a model does not define a primary key, NexORM adds an auto-incrementing `id` field.
+Define models by subclassing `Model` and assigning field instances. If a model does not define a primary key, NexORM adds an `id` field automatically using UUIDv7 values.
 
 ```python
 from nexorm import BooleanField, DateTimeField, IntegerField, Model, StringField
@@ -161,6 +159,8 @@ class Article(Model):
     published = BooleanField(default=False)
     created_at = DateTimeField(nullable=True)
 ```
+
+You can still define your own primary key explicitly if a table needs a different ID strategy.
 
 ## Queries
 

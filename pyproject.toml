@@ -11,7 +11,7 @@ requires-python = ">=3.10"
 authors = [
     { name = "Admin12121" }
 ]
-keywords = ["orm", "sqlite", "postgresql", "mysql", "database", "migrations", "model"]
+keywords = ["orm", "sqlite", "postgresql", "mysql", "uuid", "database", "migrations", "model"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Environment :: Console",
