@@ -1,4 +1,4 @@
-from nexorm.database import configure, default_db
+from nexorm.database import Database, configure, default_db, get_connection
 from nexorm.exceptions import DoesNotExist, IntegrityError, MultipleObjectsReturned, ValidationError
 from nexorm.fields import (
     BooleanField,
@@ -30,7 +30,9 @@ __all__ = [
     "DecimalField",
     "ForeignKey",
     "configure",
+    "Database",
     "default_db",
+    "get_connection",
     "transaction",
     "ValidationError",
     "IntegrityError",

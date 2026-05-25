@@ -44,24 +44,24 @@ class Model(metaclass=ModelBase):
             value = kwargs.get(name, field.get_default())
             setattr(self, name, value)
 
-    def validate(self):
-        return validate_instance(self)
+    def validate(self, db=None):
+        return validate_instance(self, db)
 
-    def save(self):
-        self.validate()
-        engine = CRUDEngine()
+    def save(self, db=None):
+        self.validate(db)
+        engine = CRUDEngine(db)
         pk = self._meta.primary_key
         if getattr(self, pk.name, None) is None:
             return wrap_integrity_error(lambda: engine.insert(self))
         return wrap_integrity_error(lambda: engine.update(self))
 
-    def delete(self):
-        return wrap_integrity_error(lambda: CRUDEngine().delete(self))
+    def delete(self, db=None):
+        return wrap_integrity_error(lambda: CRUDEngine(db).delete(self))
 
-    def update(self, **kwargs):
+    def update(self, db=None, **kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)
-        return self.save()
+        return self.save(db)
 
     def to_dict(self):
         return {name: getattr(self, name, None) for name in self._meta.fields}

@@ -86,10 +86,31 @@ class Database:
 
 
 default_db = Database()
+connections = {"default": default_db}
 
 
-def configure(path="db.sqlite3", dialect=None):
-    default_db.close()
-    default_db.path = path
-    default_db.dialect = dialect or SQLiteDialect()
-    return default_db
+def configure(path="db.sqlite3", dialect=None, alias="default"):
+    if alias == "default":
+        default_db.close()
+        default_db.path = path
+        default_db.dialect = dialect or SQLiteDialect()
+        connections["default"] = default_db
+        return default_db
+
+    db = connections.get(alias)
+    if db is None:
+        db = Database(path, dialect or SQLiteDialect())
+        connections[alias] = db
+        return db
+
+    db.close()
+    db.path = path
+    db.dialect = dialect or SQLiteDialect()
+    return db
+
+
+def get_connection(alias="default"):
+    try:
+        return connections[alias]
+    except KeyError as exc:
+        raise KeyError(f"Unknown NexORM database connection: {alias}") from exc
