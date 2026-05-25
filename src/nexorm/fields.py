@@ -4,6 +4,19 @@ from decimal import Decimal
 from nexorm.exceptions import ConfigurationError
 
 
+VALID_ON_DELETE_ACTIONS = {"CASCADE", "RESTRICT", "SET NULL", "NO ACTION", "SET DEFAULT"}
+
+
+def normalize_on_delete(value):
+    action = str(value).replace("_", " ").upper()
+    if action not in VALID_ON_DELETE_ACTIONS:
+        valid = ", ".join(sorted(VALID_ON_DELETE_ACTIONS))
+        raise ConfigurationError(
+            f"Unsupported on_delete action: {value!r}. Expected one of: {valid}"
+        )
+    return action
+
+
 class Field:
     type_name = "text"
     python_type = object
@@ -169,7 +182,7 @@ class ForeignKey(IntegerField):
         kwargs.setdefault("index", True)
         super().__init__(**kwargs)
         self.to = to
-        self.on_delete = on_delete
+        self.on_delete = normalize_on_delete(on_delete)
         self.related_name = related_name
 
     def target_model(self):

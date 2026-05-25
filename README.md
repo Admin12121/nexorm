@@ -6,7 +6,7 @@
 
 <p align="center">
   <a href="https://pypi.org/project/nexorm/">
-    <img alt="Release" src="https://img.shields.io/badge/release-v0.1.0-f2c6c2?style=for-the-badge&labelColor=2f2d42">
+    <img alt="Release" src="https://img.shields.io/badge/release-v0.2.0-f2c6c2?style=for-the-badge&labelColor=2f2d42">
   </a>
   <a href="https://github.com/Admin12121/nexorm/stargazers">
     <img alt="Stars" src="https://img.shields.io/github/stars/Admin12121/nexorm?style=for-the-badge&labelColor=34364d&color=b8b8f3">
@@ -36,7 +36,7 @@ pip install "nexorm[all]"
 For local development:
 
 ```bash
-python -m pip install -e ".[dev]"
+python -m pip install -e ".[dev,all]"
 ```
 
 ## Quick Start
@@ -267,9 +267,18 @@ nexorm --url mysql://app:secret@localhost:3306/appdb migrate
 ## Build
 
 ```bash
-python -m pip install --upgrade build twine
+python -m pip install -e ".[dev,all]"
+python -m pytest -q
 python -m build
-python -m twine check dist/*
+python -m twine check dist/nexorm-0.2.0*
+```
+
+Run PostgreSQL/MySQL integration tests by providing live test database URLs:
+
+```bash
+NEXORM_POSTGRES_URL="postgresql://nexorm:nexorm@127.0.0.1:55432/nexorm" \
+NEXORM_MYSQL_URL="mysql://nexorm:nexorm@127.0.0.1:53306/nexorm" \
+python -m pytest -q tests/test_backends.py
 ```
 
 ## Publish to PyPI
@@ -295,4 +304,6 @@ python -m twine upload --repository testpypi dist/*
 
 ## Status
 
-NexORM is an early package. The current implementation supports SQLite through `sqlite3`, PostgreSQL through `psycopg`, and MySQL through `PyMySQL`. The public API is still small: model fields, managers/querysets, raw queries, transactions, named connections, backend-aware relations, and file-based migrations with backend-specific DDL rendering.
+NexORM is an early package. Version 0.2.0 expands the project from SQLite-only usage to SQLite, PostgreSQL, and MySQL support across connections, queries, transactions, relations, migrations, and backend-specific DDL rendering.
+
+Current capabilities include model fields, automatic UUIDv7 primary keys, managers/querysets, parameterized raw queries, transactions with savepoints, named connections, backend-aware relations, and file-based migrations. PostgreSQL and MySQL support is covered by optional Docker-backed integration tests, but the package should still be treated as alpha software while the backend surface matures.

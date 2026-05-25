@@ -128,10 +128,12 @@ class BaseDialect:
         )
 
     def foreign_key_sql_from_state(self, state):
+        from nexorm.fields import normalize_on_delete
+
         column = state["column"]
         target_table = state["to_table"]
         target_field = state["to_column"]
-        on_delete = state.get("on_delete", "CASCADE")
+        on_delete = normalize_on_delete(state.get("on_delete", "CASCADE"))
         prefix = ""
         if state.get("name"):
             prefix = f"CONSTRAINT {self.quote_identifier(state['name'])} "

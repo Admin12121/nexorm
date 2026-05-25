@@ -1,7 +1,11 @@
 import uuid
 
+import pytest
+
+import nexorm.uuid as uuid_module
 from nexorm import Database, ForeignKey, IntegerField, Model, StringField, configure, transaction
 from nexorm.dialects import MySQLDialect, PostgresDialect
+from nexorm.exceptions import ConfigurationError
 from nexorm.migrations.engine import MigrationEngine
 from nexorm.migrations.state import model_state
 from nexorm.migrations.operations import CreateTable
@@ -38,6 +42,18 @@ def test_model_create_and_query(tmp_path):
     assert found.name == "Ada"
     assert found.age == 36
     assert User.objects.filter(name__contains="Ad").count() == 1
+
+    with pytest.raises(ConfigurationError):
+        User.objects.raw("SELECT * FROM users")
+
+    raw_user = User.objects.raw("SELECT * FROM users WHERE id = ?", [created.id]).first()
+    assert raw_user.id == created.id
+
+    detached = User(id=created.id, name="Grace", age=37)
+    detached.save()
+
+    assert User.objects.count() == 1
+    assert User.objects.get(id=created.id).name == "Grace"
 
 
 def test_named_database_connection(tmp_path):
@@ -96,6 +112,23 @@ def test_portable_migration_state_renders_for_backend_dialects():
     assert '"name" VARCHAR(80) NOT NULL' in postgres_sql
     assert "`id` CHAR(36) PRIMARY KEY" in mysql_sql
     assert "`name` VARCHAR(80) NOT NULL" in mysql_sql
+
+
+def test_foreign_key_on_delete_is_validated():
+    with pytest.raises(ConfigurationError):
+
+        class BadForeignKey(Model):
+            author_id = ForeignKey("Ledger", on_delete="CASCADE; DROP TABLE users")
+
+
+def test_uuid7_burst_does_not_drift_timestamp(monkeypatch):
+    fixed_ms = 1_700_000_000_000
+    monkeypatch.setattr(uuid_module.time, "time_ns", lambda: fixed_ms * 1_000_000)
+
+    values = [uuid_module.uuid7() for _ in range(5000)]
+
+    assert all(value.version == 7 for value in values)
+    assert {value.int >> 80 for value in values} == {fixed_ms}
 
 
 def test_relations_follow_the_queryset_database(tmp_path):

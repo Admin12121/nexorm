@@ -37,6 +37,7 @@ class ModelBase(type):
 
 class Model(metaclass=ModelBase):
     def __init__(self, **kwargs):
+        provided_fields = set(kwargs)
         unknown = set(kwargs) - set(self._meta.fields)
         if unknown:
             fields = ", ".join(sorted(unknown))
@@ -44,6 +45,7 @@ class Model(metaclass=ModelBase):
         for name, field in self._meta.fields.items():
             value = kwargs.get(name, field.get_default())
             setattr(self, name, value)
+        self._nexorm_pk_provided = self._meta.primary_key.name in provided_fields
         self._nexorm_persisted = False
 
     def validate(self, db=None):
@@ -55,6 +57,8 @@ class Model(metaclass=ModelBase):
         adding = not getattr(self, "_nexorm_persisted", False)
         self.validate(db)
         engine = CRUDEngine(db)
+        if adding and self._nexorm_pk_provided and engine.exists(self):
+            return wrap_integrity_error(lambda: engine.update(self))
         if adding:
             return wrap_integrity_error(lambda: engine.insert(self))
         return wrap_integrity_error(lambda: engine.update(self))

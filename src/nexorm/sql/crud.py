@@ -69,6 +69,19 @@ class CRUDEngine:
         instance._nexorm_persisted = True
         return instance
 
+    def exists(self, instance):
+        meta = instance._meta
+        pk = meta.primary_key
+        row = self.db.fetchone(
+            (
+                f"SELECT 1 FROM {self.dialect.quote_identifier(meta.table_name)} "
+                f"WHERE {self.dialect.quote_identifier(pk.name)} = {self.dialect.placeholder} "
+                "LIMIT 1"
+            ),
+            [pk.to_db(getattr(instance, pk.name))],
+        )
+        return row is not None
+
     def delete(self, instance):
         meta = instance._meta
         pk = meta.primary_key
